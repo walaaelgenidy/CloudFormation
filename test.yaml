@@ -1,0 +1,36 @@
+Description: >
+    this templete create EC2 and Security group
+Resources:
+    MysecurityGroup:
+      Type: AWS::EC2::SecurityGroup
+      Properties:
+       GroupDescription:  allows inbound access on TCP port 80
+       VpcId: vpc-0183a302a26ae1792
+       SecurityGroupIngress:
+        - IpProtocol: tcp 
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+       SecurityGroupEgress:
+        - IpProtocol: -1
+          FromPort: -1
+          ToPort: -1
+          CidrIp: 0.0.0.0/0
+    MyServerInstance:
+      Type: AWS::EC2::Instance 
+      Properties:  
+        InstanceType: t3.micro
+        ImageId: ami-09246ddb00c7c4fef
+        NetworkInterfaces:
+          - AssociatePublicIpAddress: "true"
+            DeviceIndex: "0"
+            GroupSet: 
+              - Ref: "MysecurityGroup"
+            SubnetId: "subnet-0a8af0ae4d5b5e8e7"
+        UserData:
+          Fn::Base64: AWS CloudFormation 
+            #!/bin/bash
+            yum update -y
+            yum install -y httpd
+            systemctl start httpd
+            systemctl enable httpd
