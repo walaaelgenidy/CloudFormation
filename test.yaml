@@ -1,36 +1,41 @@
-Description: >
-    this templete create EC2 and Security group
+Parameters:
+  myVPC:
+      Description: VPC used to deploy our resources below
+      Type: AWS::EC2::VPC::0183a302a26ae1792
+  PublicSubnet:
+      Description: Subnet to be used for our Web Server
+      Type: AWS::EC2::Subnet::0a8af0ae4d5b5e8e7
+  AMItoUse:
+      Description: AMI to use for our base image
+      Type: ami-09246ddb00c7c4fef
 Resources:
-    MysecurityGroup:
-      Type: AWS::EC2::SecurityGroup
-      Properties:
-       GroupDescription:  allows inbound access on TCP port 80
-       VpcId: vpc-0183a302a26ae1792
-       SecurityGroupIngress:
-        - IpProtocol: tcp 
+  myWebAccessSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+        GroupDescription: Allow http to our test host
+        VpcId: 
+          Ref: myVPC
+        SecurityGroupIngress:
+        - IpProtocol: tcp
           FromPort: 80
           ToPort: 80
           CidrIp: 0.0.0.0/0
-       SecurityGroupEgress:
+        SecurityGroupEgress:
         - IpProtocol: -1
           FromPort: -1
           ToPort: -1
           CidrIp: 0.0.0.0/0
-    MyServerInstance:
-      Type: AWS::EC2::Instance 
-      Properties:  
-        InstanceType: t3.micro
-        ImageId: ami-09246ddb00c7c4fef
-        NetworkInterfaces:
-          - AssociatePublicIpAddress: "true"
-            DeviceIndex: "0"
-            GroupSet: 
-              - Ref: "MysecurityGroup"
-            SubnetId: "subnet-0a8af0ae4d5b5e8e7"
-        UserData:
-          Fn::Base64: !Sub |
-            #!/bin/bash
-            yum update -y
-            yum install -y httpd
-            systemctl start httpd
-            systemctl enable httpd
+  myWebServerInstance: 
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t3.micro
+      ImageId:
+        Ref: AMItoUse
+      NetworkInterfaces: 
+        - AssociatePublicIpAddress: "true"
+          DeviceIndex: "0"
+          GroupSet: 
+            - Ref: "WebAccessSecurityGroup"
+          SubnetId: 
+            Ref: "PublicSubnet"
+     
