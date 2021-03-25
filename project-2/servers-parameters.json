@@ -1,0 +1,18 @@
+[
+    {
+        "ParameterKey": "EnvironmentName",
+        "ParameterValue": "UdacityProject_Challenge1"
+        },
+    {
+        "ParameterKey": "PrivateSubnet",
+        "ParameterValue": "subnet-010ce761358fb7d22"
+    },
+    {
+        "ParameterKey": "VPC",
+        "ParameterValue": "vpc-01853e5b4e258a0f4"
+    },
+    {
+        "ParameterKey": "AMItoUse",
+        "ParameterValue": "ami-089c6f2e3866f0f14"
+   }
+]

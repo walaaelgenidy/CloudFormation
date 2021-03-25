@@ -1,0 +1,74 @@
+Parameters:
+
+    EnvironmentName:
+          Description: An environment name that will be prefixed to resource names
+          Type: String
+    VPC:
+      Description: VPC used to deploy our resources below
+      Type: AWS::EC2::VPC::Id
+          
+    AMItoUse:
+      Description: AMI to use for our base image
+      Type: String  
+
+    PrivateSubnet:
+      Description: Subnet to be used for our Web Server
+      Type: AWS::EC2::Subnet::Id    
+
+Resources:
+
+    # IAM Role to allow EC2 Session Manager to access our server
+    RoleForSSMAccess: 
+      Type: "AWS::IAM::Role"
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - ec2.amazonaws.com
+              Action:
+                - 'sts:AssumeRole'
+        ManagedPolicyArns:
+          - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+
+#An InstanceProfile will allow passing the IAM role to our server.
+    ServerInstanceProfile: 
+        Type: AWS::IAM::InstanceProfile
+        Properties: 
+          Roles: 
+            - !Ref RoleForSSMAccess  
+
+    #Use -1 to specify all protocol    
+    WebServerSecGroup:
+        Type: AWS::EC2::SecurityGroup
+        Properties:
+          GroupDescription: Allow http to our hosts 
+          VpcId: !Ref VPC
+          SecurityGroupIngress:
+          - IpProtocol: tcp
+            FromPort: 80
+            ToPort: 80
+            CidrIp: 0.0.0.0/0
+          SecurityGroupEgress:
+          - IpProtocol: -1
+            FromPort: -1
+            ToPort: -1
+            CidrIp: 0.0.0.0/0  
+    ServerInstance:
+        Type: AWS::EC2::Instance
+        Properties:
+          InstanceType: t3.micro
+          ImageId: !Ref AMItoUse
+          IamInstanceProfile: !Ref ServerInstanceProfile
+          NetworkInterfaces: 
+            - AssociatePublicIpAddress: "true"
+              DeviceIndex: "0"
+              GroupSet: 
+                - Ref: "WebServerSecGroup"
+              SubnetId: 
+                Ref: "PrivateSubnet"
+                  
+                    
+                
