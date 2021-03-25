@@ -5,17 +5,59 @@ Parameters:
     EnvironmentName:
         Description: An environment name that will be prefixed to resource names
         Type: String
+
     AMItoUse:
       Description: AMI to use for our base image
-      Type: String    
+      Type: String  
+
+    VPC:
+      Description: VPC used to deploy our resources below
+      Type: AWS::EC2::VPC::Id
+
+    PrivateSubnet1:
+      Description: Subnet to be used for our Web Server
+      Type: AWS::EC2::Subnet::Id  
+
+    PrivateSubnet2:
+      Description: Subnet to be used for our Web Server
+      Type: AWS::EC2::Subnet::Id        
+    
+    PublicSubnet1:
+      Description: Subnet to be used for our Web Server
+      Type: AWS::EC2::Subnet::Id  
+
+    PublicSubnet2:
+      Description: Subnet to be used for our Web Server
+      Type: AWS::EC2::Subnet::Id        
+
 Resources:
+      UdacityS3ReadOnlyEC2: 
+        Type: "AWS::IAM::Role"
+        Properties:
+          AssumeRolePolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Principal:
+                  Service:
+                    - ec2.amazonaws.com
+                Action:
+                  - 'sts:AssumeRole'
+          ManagedPolicyArns:
+            - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+      #An InstanceProfile will allow passing the IAM role to our server.
+      ServerInstanceProfile: 
+          Type: AWS::IAM::InstanceProfile
+          Properties: 
+            Roles: 
+              - !Ref UdacityS3ReadOnlyEC2        
+
       LBSecGroup:
         Type: AWS::EC2::SecurityGroup
         Properties:
           GroupDescription: Allow http to our load balancer at port 80
-          VpcId:
-            Fn::ImportValue:
-              !Sub "${EnvironmentName}-VPCID"
+          VpcId: !Ref VPC
+          
           SecurityGroupIngress:
           - IpProtocol: tcp
             FromPort: 80
@@ -26,25 +68,21 @@ Resources:
             FromPort: 80
             ToPort: 80
             CidrIp: 0.0.0.0/0
-          # - IpProtocol: tcp
-          #   FromPort: 8080
-          #   ToPort: 8080
-          #   CidrIp: 0.0.0.0/0  
-      WebServerSecGroup:
-        Type: AWS::EC2::SecurityGroup
-        Properties:
-          GroupDescription: Allow http to our hosts and SSH from local only
-          VpcId:
-            Fn::ImportValue:
-              !Sub "${EnvironmentName}-VPCID"
-          SecurityGroupIngress:
           - IpProtocol: tcp
             FromPort: 8080
             ToPort: 8080
-            CidrIp: 0.0.0.0/0
+            CidrIp: 0.0.0.0/0  
+      
+      WebServerSecGroup:
+        Type: AWS::EC2::SecurityGroup
+        Properties:
+          GroupDescription: Udagram communicates on the default HTTP Port 80
+          VpcId: !Ref VPC
+          
+          SecurityGroupIngress:
           - IpProtocol: tcp
-            FromPort: 22
-            ToPort: 22
+            FromPort: 80
+            ToPort: 80
             CidrIp: 0.0.0.0/0
           SecurityGroupEgress:
           - IpProtocol: tcp
@@ -64,11 +102,11 @@ Resources:
               cd /var/www/html
               aws s3 cp s3://udacity-demo-1/udacity.zip .
               unzip -o udacity.zip         
-          ImageId: ami-08962a4068733a2b6
-          KeyName: instance1
+          ImageId: !Ref AMItoUse
+          IamInstanceProfile: !Ref ServerInstanceProfile
           SecurityGroups:
           - Ref: WebServerSecGroup
-          InstanceType: t3.medium
+          InstanceType: t2.medium
           BlockDeviceMappings:
           - DeviceName: "/dev/sdk"
             Ebs:
@@ -77,21 +115,20 @@ Resources:
         Type: AWS::AutoScaling::AutoScalingGroup
         Properties:
           VPCZoneIdentifier:
-          - Fn::ImportValue: 
-              !Sub "${EnvironmentName}-PRIV-NETS"
+          - !Ref PrivateSubnet1
+          - !Ref PrivateSubnet2
           LaunchConfigurationName:
             Ref: WebAppLaunchConfig
-          MinSize: '3'
-          MaxSize: '5'
+          MinSize: '4'
+          MaxSize: '8'
           TargetGroupARNs:
           - Ref: WebAppTargetGroup
-
       WebAppLB:
         Type: AWS::ElasticLoadBalancingV2::LoadBalancer
         Properties:
           Subnets:
-          - Fn::ImportValue: !Sub "${EnvironmentName}-PUB1-SN"
-          - Fn::ImportValue: !Sub "${EnvironmentName}-PUB2-SN"
+          - !Ref PublicSubnet1
+          - !Ref PublicSubnet2
           SecurityGroups:
           - Ref: LBSecGroup
       Listener:
@@ -127,6 +164,5 @@ Resources:
           Port: 8080
           Protocol: HTTP
           UnhealthyThresholdCount: 5
-          VpcId: 
-            Fn::ImportValue:
-              Fn::Sub: "${EnvironmentName}-VPCID"         
+          VpcId: !Ref VPC
+                    

@@ -2,5 +2,29 @@
     {
         "ParameterKey": "EnvironmentName",
         "ParameterValue": "Udacity-Project-IAC"
+    },
+    {
+        "ParameterKey": "AMItoUse",
+        "ParameterValue": "ami-01e7ca2ef94a0ae86"
+   },
+    {
+        "ParameterKey": "PrivateSubnet1",
+        "ParameterValue": "subnet-040bdb6ec074a10da"
+    },
+    {
+        "ParameterKey": "PrivateSubnet2",
+        "ParameterValue": "subnet-007d8c14b0fffaa68"
+    },
+    {
+        "ParameterKey": "PublicSubnet1",
+        "ParameterValue": "subnet-0f2fdd2a7f1b2de02"
+    },
+    {
+        "ParameterKey": "PublicSubnet2",
+        "ParameterValue": "subnet-0b9026e801df9769d"
+    },
+    {
+        "ParameterKey": "VPC",
+        "ParameterValue": "vpc-09a866257008c090a"
     }
 ]
