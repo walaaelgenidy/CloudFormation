@@ -68,11 +68,7 @@ Resources:
             FromPort: 80
             ToPort: 80
             CidrIp: 0.0.0.0/0
-          - IpProtocol: tcp
-            FromPort: 8080
-            ToPort: 8080
-            CidrIp: 0.0.0.0/0  
-      
+         
       WebServerSecGroup:
         Type: AWS::EC2::SecurityGroup
         Properties:
@@ -161,8 +157,12 @@ Resources:
           HealthCheckProtocol: HTTP
           HealthCheckTimeoutSeconds: 8
           HealthyThresholdCount: 2
-          Port: 8080
+          Port: 80
           Protocol: HTTP
           UnhealthyThresholdCount: 5
           VpcId: !Ref VPC
-                    
+Outputs:
+  DNS:
+    Description: Load balancer public
+    Value: serve-WebAp-1DASC6KYIPNSJ-1601055235.us-east-2.elb.amazonaws.com
+      
