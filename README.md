@@ -4,3 +4,4 @@
 - Deploy a VPC with 2 AZ
 - S3 Bucket CloudFormation template
 - S3 Bucket_update_policy
+- Create DB
